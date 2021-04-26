@@ -19,6 +19,7 @@ import tr from './tr.json';
 import uk from './uk.json';
 import zhTW from './zh-TW.json';
 import zhCN from './zh-CN.json';
+import cs from './cs.json';
 
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 
@@ -133,6 +134,12 @@ const languages = {
         name: '日本語',
         order: 17,
         url: ja,
+    },
+    cs: {
+        value: 'cs',
+        name: 'Čeština (alfa verze)',
+        order: 18,
+        url: cs,
     },
 };
 
