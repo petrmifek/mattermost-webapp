@@ -7,7 +7,7 @@ orbs:
 executors:
   default:
     docker:
-      - image: mattermost/mattermost-build-webapp:20200829_node-10.22
+      - image: mattermost/mattermost-build-webapp:20210524_node-16
     resource_class: "xlarge"
 
 aliases:
@@ -215,7 +215,7 @@ jobs:
           at: ~/mattermost/
       - run:
           command: |
-            curl -f -o server.tar.gz https://pr-builds.mattermost.com/mattermost-server/$(echo "${CIRCLE_BRANCH}" | sed 's/pull\//PR-/g')/mattermost-enterprise-linux-amd64.tar.gz || curl -f -o server.tar.gz https://s3.amazonaws.com/releases.mattermost.com/gitlab/bundle/master/mattermost-enterprise-linux-amd64.tar.gz
+            curl -f -o server.tar.gz https://pr-builds.mattermost.com/mattermost-server/$(echo "${CIRCLE_BRANCH}" | sed 's/pull\//PR-/g')/mattermost-enterprise-linux-amd64.tar.gz || curl -f -o server.tar.gz https://s3.amazonaws.com/releases.mattermost.com/gitlab/bundle/release-5.37/mattermost-enterprise-linux-amd64.tar.gz
 
             tar xf server.tar.gz
             rm -rf mattermost/client

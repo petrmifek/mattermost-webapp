@@ -5,6 +5,8 @@ import keyMirror from 'key-mirror';
 
 import Permissions from 'mattermost-redux/constants/permissions';
 
+import {CustomStatusDuration} from 'mattermost-redux/types/users';
+
 import * as PostListUtils from 'mattermost-redux/utils/post_list';
 
 import audioIcon from 'images/icons/audio.svg';
@@ -88,6 +90,8 @@ export const Preferences = {
     LINK_PREVIEW_DISPLAY_DEFAULT: 'true',
     COLLAPSE_DISPLAY: 'collapse_previews',
     COLLAPSE_DISPLAY_DEFAULT: 'false',
+    AVAILABILITY_STATUS_ON_POSTS: 'availability_status_on_posts',
+    AVAILABILITY_STATUS_ON_POSTS_DEFAULT: 'true',
     USE_MILITARY_TIME: 'use_military_time',
     USE_MILITARY_TIME_DEFAULT: 'false',
     CATEGORY_THEME: 'theme',
@@ -106,11 +110,15 @@ export const Preferences = {
     CLOUD_UPGRADE_BANNER: 'cloud_upgrade_banner',
     CLOUD_TRIAL_BANNER: 'cloud_trial_banner',
     ADMIN_CLOUD_UPGRADE_PANEL: 'admin_cloud_upgrade_panel',
+    CATEGORY_EMOJI: 'emoji',
+    EMOJI_SKINTONE: 'emoji_skintone',
 };
 
 export const ActionTypes = keyMirror({
     RECEIVED_FOCUSED_POST: null,
     SELECT_POST: null,
+    HIGHLIGHT_REPLY: null,
+    CLEAR_HIGHLIGHT_REPLY: null,
     SELECT_POST_CARD: null,
     INCREASE_POST_VISIBILITY: null,
     LOADING_POSTS: null,
@@ -166,6 +174,7 @@ export const ActionTypes = keyMirror({
     UPDATE_CHANNEL_LAST_VIEWED_AT: null,
 
     INCREMENT_EMOJI_PICKER_PAGE: null,
+    SET_RECENT_SKIN: null,
 
     STATUS_DROPDOWN_TOGGLE: null,
     TOGGLE_LHS: null,
@@ -226,6 +235,9 @@ export const ActionTypes = keyMirror({
 
     SET_SHOW_NEXT_STEPS_VIEW: null,
     SET_FILES_FILTER_BY_EXT: null,
+
+    SUPPRESS_RHS: null,
+    UNSUPPRESS_RHS: null,
 });
 
 export const PostRequestTypes = keyMirror({
@@ -294,6 +306,7 @@ export const ModalIdentifiers = {
     COMMERCIAL_SUPPORT: 'commercial_support',
     NO_INTERNET_CONNECTION: 'no_internet_connection',
     JOIN_CHANNEL_PROMPT: 'join_channel_prompt',
+    COLLAPSED_REPLY_THREADS_MODAL: 'collapsed_reply_threads_modal',
 };
 
 export const UserStatuses = {
@@ -318,6 +331,12 @@ export const EventTypes = Object.assign(
         POST_LIST_SCROLL_TO_BOTTOM: null,
     }),
 );
+
+export const CloudProducts = {
+    STARTER: 'cloud-starter',
+    PROFESSIONAL: 'cloud-professional',
+    ENTERPRISE: 'cloud-enterprise',
+};
 
 export const A11yClassNames = {
     REGION: 'a11y__region',
@@ -429,6 +448,8 @@ export const RecommendedNextSteps = {
 
 export const Threads = {
     CHANGED_SELECTED_THREAD: 'changed_selected_thread',
+    CHANGED_LAST_VIEWED_AT: 'changed_last_viewed_at',
+    MANUALLY_UNREAD_THREAD: 'manually_unread_thread',
 };
 
 export const CloudBanners = {
@@ -533,6 +554,9 @@ export const SearchTypes = keyMirror({
     SET_SYSTEM_USERS_SEARCH: null,
     SET_USER_GRID_SEARCH: null,
     SET_USER_GRID_FILTERS: null,
+    SET_TEAM_LIST_SEARCH: null,
+    SET_CHANNEL_LIST_SEARCH: null,
+    SET_CHANNEL_LIST_FILTERS: null,
 });
 
 export const StorageTypes = keyMirror({
@@ -714,6 +738,8 @@ export const AboutLinks = {
 
 export const CloudLinks = {
     BILLING_DOCS: 'https://docs.mattermost.com/cloud/cloud-billing/cloud-billing.html',
+    COMPARE_PLANS: 'https://mattermost.com/pricing-cloud/#pricing-grid-block_5fa2028808529',
+    CLOUD_PRICING: 'https://mattermost.com/pricing-cloud/',
 };
 
 export const PermissionsScope = {
@@ -785,7 +811,7 @@ export const PermissionsScope = {
     [Permissions.CONVERT_PUBLIC_CHANNEL_TO_PRIVATE]: 'channel_scope',
     [Permissions.CONVERT_PRIVATE_CHANNEL_TO_PUBLIC]: 'channel_scope',
     [Permissions.MANAGE_SHARED_CHANNELS]: 'system_scope',
-    [Permissions.MANAGE_REMOTE_CLUSTERS]: 'system_scope',
+    [Permissions.MANAGE_SECURE_CONNECTIONS]: 'system_scope',
 };
 
 export const DefaultRolePermissions = {
@@ -947,10 +973,6 @@ export const Constants = {
 
     // This is the same limit set https://github.com/mattermost/mattermost-server/blob/master/model/config.go#L105
     MAXIMUM_LOGIN_ATTEMPTS_DEFAULT: 10,
-
-    // This is the same limit set
-    // https://github.com/mattermost/mattermost-server/pull/16835/files#diff-73c61af5954b16f5e3cb5ee786af9eb698f660eff0d65db5556949be5fb6e60bR15
-    CUSTOM_STATUS_TEXT_CHARACTER_LIMIT: 100,
 
     // This is the same limit set https://github.com/mattermost/mattermost-server/blob/master/api4/team.go#L23
     MAX_ADD_MEMBERS_BATCH: 256,
@@ -1599,6 +1621,8 @@ export const Constants = {
     MENTION_MEMBERS: 'mention.members',
     MENTION_MORE_MEMBERS: 'mention.moremembers',
     MENTION_NONMEMBERS: 'mention.nonmembers',
+    MENTION_PUBLIC_CHANNELS: 'mention.public.channels',
+    MENTION_RECENT_CHANNELS: 'mention.recent.channels',
     MENTION_SPECIAL: 'mention.special',
     MENTION_GROUPS: 'mention.groups',
     DEFAULT_NOTIFICATION_DURATION: 5000,
@@ -1619,6 +1643,8 @@ export const Constants = {
     TRANSPARENT_PIXEL: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
     TRIPLE_BACK_TICKS: /```/g,
     MAX_ATTACHMENT_FOOTER_LENGTH: 300,
+    ACCEPT_STATIC_IMAGE: '.jpeg,.jpg,.png,.bmp',
+    ACCEPT_EMOJI_IMAGE: '.jpeg,.jpg,.png,.gif',
 };
 
 export const ValidationErrors = {
@@ -1657,8 +1683,56 @@ t('suggestion.mention.unread.channels');
 t('suggestion.mention.members');
 t('suggestion.mention.moremembers');
 t('suggestion.mention.nonmembers');
+t('suggestion.mention.public.channels');
+t('suggestion.mention.recent.channels');
 t('suggestion.mention.special');
 t('suggestion.archive');
 t('suggestion.mention.groups');
+
+const {
+    DONT_CLEAR,
+    THIRTY_MINUTES,
+    ONE_HOUR,
+    FOUR_HOURS,
+    TODAY,
+    THIS_WEEK,
+    DATE_AND_TIME,
+    CUSTOM_DATE_TIME,
+} = CustomStatusDuration;
+
+export const durationValues = {
+    [DONT_CLEAR]: {
+        id: t('custom_status.expiry_dropdown.dont_clear'),
+        defaultMessage: "Don't clear",
+    },
+    [THIRTY_MINUTES]: {
+        id: t('custom_status.expiry_dropdown.thirty_minutes'),
+        defaultMessage: '30 minutes',
+    },
+    [ONE_HOUR]: {
+        id: t('custom_status.expiry_dropdown.one_hour'),
+        defaultMessage: '1 hour',
+    },
+    [FOUR_HOURS]: {
+        id: t('custom_status.expiry_dropdown.four_hours'),
+        defaultMessage: '4 hours',
+    },
+    [TODAY]: {
+        id: t('custom_status.expiry_dropdown.today'),
+        defaultMessage: 'Today',
+    },
+    [THIS_WEEK]: {
+        id: t('custom_status.expiry_dropdown.this_week'),
+        defaultMessage: 'This week',
+    },
+    [DATE_AND_TIME]: {
+        id: t('custom_status.expiry_dropdown.date_and_time'),
+        defaultMessage: 'Custom Date and Time',
+    },
+    [CUSTOM_DATE_TIME]: {
+        id: t('custom_status.expiry_dropdown.date_and_time'),
+        defaultMessage: 'Custom Date and Time',
+    },
+};
 
 export default Constants;
